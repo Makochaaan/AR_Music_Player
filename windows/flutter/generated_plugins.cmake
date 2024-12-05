@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  audioplayers_windows
   charset_converter
   file_selector_windows
   flutter_unity_widget

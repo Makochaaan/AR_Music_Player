@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AddImagePage extends StatefulWidget {
+  const AddImagePage({super.key});
+
   @override
   _AddImagePageState createState() => _AddImagePageState();
 }
@@ -16,15 +18,15 @@ class _AddImagePageState extends State<AddImagePage> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text("画像追加ページ"),
+        title: const Text("画像追加ページ"),
       ),
       body: Container(
-        padding: EdgeInsets.all(64),
+        padding: const EdgeInsets.all(64),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const SizedBox(height:8),
-            Container(
+            SizedBox(
               width: double.infinity,
               
               child: ElevatedButton(
@@ -37,15 +39,15 @@ class _AddImagePageState extends State<AddImagePage> {
                 child: const Text("カメラから追加", style: TextStyle(color: Colors.white)),
               )
             ),
-             const SizedBox(height:8),
-            Container(
+            const SizedBox(height:8),
+            SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
                 ),
                 onPressed: () async {
-                  final List<XFile>? pickedFiles = await imagePicker.pickMultiImage();
+                  final List<XFile> pickedFiles = await imagePicker.pickMultiImage();
                   setState(() {
                     if (pickedFiles != null){
                       for (var i = 0; i < pickedFiles.length; i++) {
@@ -60,7 +62,7 @@ class _AddImagePageState extends State<AddImagePage> {
               )
             ),
             const SizedBox(height:8),
-            Container(
+            SizedBox(
               width: double.infinity,
               child: TextButton(
               onPressed: () {

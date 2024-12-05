@@ -1,13 +1,12 @@
-import 'dart:io';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'addImagePage.dart';
 import '../component/displayImage.dart';
 import '../component/addImageDialog.dart';
-import 'unityCameraPage.dart';
+import 'unityPage.dart';
 
 class MainPage extends StatefulWidget {
+  const MainPage({super.key});
+
   @override 
   _MainPageState createState() => _MainPageState();
 }
@@ -31,9 +30,10 @@ class _MainPageState extends State<MainPage> {
             crossAxisSpacing: 5,
             childAspectRatio: 0.8,
           ),
-        itemCount: pictureList.length+1,
-        itemBuilder: (context, index){
+        itemCount: pictureList.length+1, // 現在登録されている画像数+1
+        itemBuilder: (context, index){ // 順次画像を表示
           if (index>=pictureList.length || pictureList.isEmpty){
+            // 「画像を追加」窓を追加する処理
             return InkWell(
               onTap: () async {
                 final newListComponent = await showDialog<dynamic>(
@@ -51,9 +51,9 @@ class _MainPageState extends State<MainPage> {
                       pictureList.add(newListComponent);
                     });
                   }
-                };
+                }
               },
-              child: SizedBox(
+              child: SizedBox( // カードデザイン
                 child: Card(
                   margin: const EdgeInsets.all(30),
                   shape: RoundedRectangleBorder(
@@ -74,12 +74,14 @@ class _MainPageState extends State<MainPage> {
               ),
             );
           } else {
+            // 画像を表示する処理
             return DisplayImageWidget(index: index, pictureList: pictureList, musicList: musicList);
           }
         },
       ),
      
 
+      // TODO：フッター処理
       bottomNavigationBar:Container(
         height: 60,
         color: Colors.blue,
