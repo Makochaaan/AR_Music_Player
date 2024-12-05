@@ -33,7 +33,7 @@ dependencies:
   image_picker: ^0.8.5+3
 
   file_picker: ^5.2.2
-  path_provider: ^2.0.0
+  path_provider: ^2.1.2
   charset_converter: ^2.2.0
   just_audio: ^0.9.37
   flutter_unity_widget: ^2022.2.0
