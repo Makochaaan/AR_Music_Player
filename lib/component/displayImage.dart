@@ -1,27 +1,35 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import '../page/imagePage.dart';
+import '../util/database.dart';
 
 class DisplayImageWidget extends StatefulWidget {
   final int index;
-  final List<XFile> pictureList;
-  final List<List<String>> musicList;
 
-  const DisplayImageWidget({super.key, required this.index, required this.pictureList, required this.musicList});
+  const DisplayImageWidget({super.key, required this.index});
 
   @override
   _DisplayImageWidgetState createState() => _DisplayImageWidgetState();
 }
 
 class _DisplayImageWidgetState extends State<DisplayImageWidget> {
+
+  List<List<dynamic>> pictureList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    final databaseHelper = DatabaseHelper();
+    databaseHelper.getImageInfo(pictureList: pictureList, index: widget.index);
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(builder: (context) {
-            return AddInfoPage(picture: widget.pictureList[widget.index], musicList: widget.musicList, index:widget.index);
+            return AddInfoPage(pictureData: pictureList[0]);
           }),
         );
         
@@ -34,7 +42,7 @@ class _DisplayImageWidgetState extends State<DisplayImageWidget> {
             borderRadius: BorderRadius.circular(20),
           ),
           clipBehavior: Clip.antiAliasWithSaveLayer,
-          child: Image.file(File(widget.pictureList[widget.index].path)),
+          child: Image.file(File(pictureList[0][1])),
         ),
       ),
     );

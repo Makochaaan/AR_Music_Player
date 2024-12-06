@@ -42,15 +42,16 @@ class DatabaseHelper {
 
   // データベースに画像データを挿入
   // ボタンのクリックに応じて自動で画像IDを生成
-  void insertImage({required String imagePath, required String place, required String time, required String description}) {
+  // addImageによる画像の登録時に使用
+  // 参照先：mainPage.dart
+  void insertImage({required String imagePath}) {
     final dbPath = p.join(Directory.current.path, 'assets', 'user_database.db');
     final db = sqlite3.open(dbPath);
 
-    final sqlText = db.prepare('INSERT INTO Image(ImagePath, Place, Time, Description) VALUES (?, ?, ?, ?)');
-
-    sqlText.execute([imagePath, place, time, description]);
-
+    final sqlText = db.prepare('INSERT INTO Image(ImagePath) VALUES (?)');
+    sqlText.execute([imagePath]);
     sqlText.dispose();
+    
     db.dispose();
   }
 
@@ -138,23 +139,61 @@ class DatabaseHelper {
     } 
   }
 
+  void getImageInfo({required List<List<dynamic>> pictureList, int? index}) {
+    final dbPath = p.join(Directory.current.path, 'assets', 'user_database.db');
+    final db = sqlite3.open(dbPath);
+
+    if (index != null) {
+      final result = db.select('SELECT * FROM Image WHERE ImageId = ?', [index]);
+      for (final row in result) {
+        pictureList.add([row[0], row[1], row[2], row[3], row[4]]);
+      }
+    } else {
+      final result = db.select('SELECT * FROM Image');
+      for (final row in result) {
+        pictureList.add([row[0], row[1], row[2], row[3], row[4]]);
+      }
+    }
+
+    db.dispose();
+  }
+
+  void getMusicInfo({required List<dynamic> musicList, required int imageId}) {
+    final dbPath = p.join(Directory.current.path, 'assets', 'user_database.db');
+    final db = sqlite3.open(dbPath);
+
+    final result = db.select('SELECT * FROM Music WHERE ImageId = ?', [imageId]);
+    musicList.add([result[0], result[1], result[2], result[3], result[4], result[5]]);
+
+    db.dispose();
+  }
+
 }
 
 // void main() {
 //   final databaseHelper = DatabaseHelper();
 //   databaseHelper.initTable();
-  // for (int i=0; i<10; i++) {
-  //   databaseHelper.insertImage(imagePath:"a", place:"a", time:"a", description:"a");
-  //   if (i%4 == 0) {
-  //     databaseHelper.insertMusic(imageId: i, musicId: 5, title: "b", artist: "b", album: "b");
-  //   } else {   
-  //     databaseHelper.insertMusic(imageId: i, musicPath: "b", title: "b", artist: "b", album: "b");
-  //   }
-  // }
+//   for (int i=0; i<10; i++) {
+//     databaseHelper.insertImage(imagePath:"a", place:"a", time:"a", description:"a");
+//     if (i%4 == 0) {
+//       databaseHelper.insertMusic(imageId: i, musicId: 5, title: "b", artist: "b", album: "b");
+//     } else {   
+//       databaseHelper.insertMusic(imageId: i, musicPath: "b", title: "b", artist: "b", album: "b");
+//     }
+//   }
 
   // databaseHelper.deleteData(imageId: 10);
   // databaseHelper.updateImage(iamgeId: 1, place: "b", time: "b", description: "b");
   // databaseHelper.updateMusic(imageId: 1, musicId: 1, title: "c", artist: "c", album: "c");
   // databaseHelper.updateMusic(imageId: 1, musicPath: "c", title: "c", artist: "c", album: "c");
+
+  // List<List<dynamic>> pictureList = [];
+  // List<List<dynamic>> musicList = [];
+
+  // databaseHelper.getImageInfo(pictureList);
+  // databaseHelper.getMusicInfo(musicList, 1);
+
+  // print(pictureList);
+  // print(musicList);
 
 // }

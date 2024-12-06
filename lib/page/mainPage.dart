@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import '../component/displayImage.dart';
 import '../component/addImageDialog.dart';
+import '../util/database.dart';
 import 'unityPage.dart';
 
 class MainPage extends StatefulWidget {
@@ -13,8 +13,16 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
 
-  List<XFile> pictureList = [];
-  List<List<String>> musicList = [["","","",""],["","","",""],["","","",""]];
+  List<List<dynamic>> pictureList = [];
+  List<List<dynamic>> musicList = [];
+  late DatabaseHelper databaseHelper;
+  
+  @override
+  void initState() {
+    super.initState();
+    databaseHelper = DatabaseHelper();
+    databaseHelper.getImageInfo(pictureList: pictureList);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,19 +44,22 @@ class _MainPageState extends State<MainPage> {
             // 「画像を追加」窓を追加する処理
             return InkWell(
               onTap: () async {
-                final newListComponent = await showDialog<dynamic>(
+                databaseHelper = DatabaseHelper();
+                final newPictureComponent = await showDialog<dynamic>(
                   context: context,
                   builder: (_) {
-                    return AddImageDialog();
+                    return const AddImageDialog();
                   });
-                if (newListComponent != null) {
-                  if (newListComponent is List<XFile>){
+                if (newPictureComponent != null) {
+                  if (newPictureComponent is List<String>){
                     setState(() {
-                      pictureList.addAll(newListComponent);
+                      for (var i = 0; i < newPictureComponent.length; i++) {
+                        databaseHelper.insertImage(imagePath: newPictureComponent[i]);
+                      }
                     });
-                  } else if (newListComponent is XFile){
+                  } else if (newPictureComponent is String){
                     setState(() {
-                      pictureList.add(newListComponent);
+                      databaseHelper.insertImage(imagePath: newPictureComponent);
                     });
                   }
                 }
@@ -74,8 +85,8 @@ class _MainPageState extends State<MainPage> {
               ),
             );
           } else {
-            // 画像を表示する処理
-            return DisplayImageWidget(index: index, pictureList: pictureList, musicList: musicList);
+            // 画像ウィンドウを生成する処理
+            return DisplayImageWidget(index: index);
           }
         },
       ),

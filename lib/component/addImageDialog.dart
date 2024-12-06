@@ -1,46 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../util/copyFile.dart';
 
 class AddImageDialog extends StatefulWidget {
+  const AddImageDialog({super.key});
+
   @override
   _AddImageDialogState createState() => _AddImageDialogState();
 }
 
 class _AddImageDialogState extends State<AddImageDialog> {
 
-  XFile? _image;
+  String? _image;
+  final List<String> _images = [];
   final imagePicker = ImagePicker();
   @override
   Widget build(BuildContext context) {
     return SimpleDialog(
-      title: Text('画像の選択'),
+      title: const Text('画像の選択'),
       children: [
         SimpleDialogOption(
-          child: Text('カメラから追加'),
+          child: const Text('カメラから追加'),
           onPressed: () async {
-             final pickedFile = await imagePicker.pickImage(source: ImageSource.camera);
-                  setState(() {
-                    if (pickedFile != null){
-                      _image = XFile(pickedFile.path);
-                    }
-                  });
-                  if (!mounted) return;
-                  Navigator.of(context).pop(_image);
+            final copyer = CopyFile();
+
+            // ファイルの選択
+            final pickedFile = await imagePicker.pickImage(source: ImageSource.camera);
+            if (pickedFile == null) return;
+
+            // 選択したファイルをassetsフォルダにコピー
+            await copyer.copyFileToAssets(pickedFile.path, 'image');
+            setState(() {
+              _image = pickedFile.path;
+            });
+            if (!mounted) return;
+            // パスをmainPageに返し，その先でデータベースに挿入
+            Navigator.of(context).pop(_image);
           },
         ),
         SimpleDialogOption(
-          child: Text('ギャラリーから追加'),
+          child: const Text('ギャラリーから追加'),
           onPressed: () async {
-             final List<XFile>? pickedFiles = await imagePicker.pickMultiImage();
+            final copyer = CopyFile();
+            final List<XFile> pickedFiles = await imagePicker.pickMultiImage();
+            for (var i = 0; i < pickedFiles.length; i++) {
+              await copyer.copyFileToAssets(pickedFiles[i].path, 'image');
+            }
             setState(() {
-              if (pickedFiles != null){
-                for (var i = 0; i < pickedFiles.length; i++) {
-                  pickedFiles[i] = XFile(pickedFiles[i].path);
-                }
+              for (var i = 0; i < pickedFiles.length; i++) {
+                _images.add(pickedFiles[i].path); 
               }
             });
             if (!mounted) return;
-            Navigator.of(context).pop(pickedFiles);
+            Navigator.of(context).pop(_images);
           },
         ),
       ],
