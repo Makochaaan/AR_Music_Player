@@ -15,7 +15,7 @@ class AddInfoPage extends StatefulWidget {
 
 class _AddInfoPageState extends State<AddInfoPage> {
 
-  late int imageId = widget.pictureData[0];
+  late int imageId = widget.pictureData['ImageId'];
   Map<String, dynamic> musicList = {};
   File musicFile = File('');
   Uint8List albumArtByte = Uint8List(0);
@@ -32,22 +32,40 @@ class _AddInfoPageState extends State<AddInfoPage> {
 
   Future<void> _initializeDatabase() async {
     final musicData = await databaseHelper.getMusicInfo(imageId: imageId);
-    setState(() {
-      musicList = musicData[0];
-    });
+    if (musicData.isEmpty) {
+      return;
+    } else {
+      print('Music Data: $musicData');
+      setState(() {
+        musicList = musicData[0];
+      });
+    }
+  }
+
+  Future<void> _refreshDatabase() async {
+    final musicData = await databaseHelper.getMusicInfo(imageId: imageId);
+    print('Refreshing database...');
+    for (var element in musicData) {
+      print('music Item: $element');
+    }
+    if (mounted) {
+        setState(() {
+            musicList = musicData[0];
+        });
+    }
   }
 
 
   @override
   Widget build(BuildContext context) {
-    final imagePath = widget.pictureData[1];
-    var place = (widget.pictureData[2]!=null)?widget.pictureData[2]:"";
-    var time = (widget.pictureData[3]!=null)?widget.pictureData[3]:"";
-    var description = (widget.pictureData[4]!=null)?widget.pictureData[4]:"";
+    final imagePath = widget.pictureData['ImagePath'];
+    var place = (widget.pictureData['Place']!=null)?widget.pictureData['Place']:"";
+    var time = (widget.pictureData['Time']!=null)?widget.pictureData['Time']:"";
+    var description = (widget.pictureData['Description']!=null)?widget.pictureData['Description']:"";
 
-    var title = (musicList[3]!=null)?musicList[3]:"";
-    var artist = (musicList[4]!=null)?musicList[4]:"";
-    var album = (musicList[5]!=null)?musicList[5]:"";
+    var title = (musicList['Title']!=null)?musicList['Title']:"";
+    var artist = (musicList['Artist']!=null)?musicList['Artist']:"";
+    var album = (musicList['Album']!=null)?musicList['Album']:"";
 
 
     // 音楽情報が存在する場合
@@ -95,8 +113,11 @@ class _AddInfoPageState extends State<AddInfoPage> {
 
                         // 音楽情報の更新
                         if (title != "" || artist != "" || album != "") {
+                          await databaseHelper.updateMusic(imageId: imageId, musicPath: musicFile.path, title: tag[0].toString(), artist: tag[1].toString(), album: tag[2].toString());
+                          print('Refreshing database after insertion...');
+                          await _refreshDatabase();
+                          print('Refreshed database after insertion...');
                           setState(() => {
-                            databaseHelper.updateMusic(imageId: imageId, musicPath: musicFile.path, title: tag[0].toString(), artist: tag[1].toString(), album: tag[2].toString()),
                             // pathStr = musicFile.path.toString(), 
                             title = tag[0].toString(),
                             artist = tag[1].toString(),
@@ -105,8 +126,11 @@ class _AddInfoPageState extends State<AddInfoPage> {
                             // widget.musicList[widget.index] = [titleLarge, artist, album, base64Encode(albumArtByte)],
                           });
                         } else { // 新規音楽情報の追加
+                          await databaseHelper.insertMusic(imageId: imageId, musicPath: musicFile.path, title: tag[0].toString(), artist: tag[1].toString(), album: tag[2].toString());
+                          print('Refreshing database after insertion...');
+                          await _refreshDatabase();
+                          print('Refreshed database after insertion...');
                           setState(() => {
-                            databaseHelper.insertMusic(imageId: imageId, musicPath: musicFile.path, title: tag[0].toString(), artist: tag[1].toString(), album: tag[2].toString()),
                             // pathStr = musicFile.path.toString(), 
                             title = tag[0].toString(),
                             artist = tag[1].toString(),
@@ -164,15 +188,18 @@ class _AddInfoPageState extends State<AddInfoPage> {
                               // var buffer = await processer.extractAlbumArt(musicFile);
                               // if (buffer != null){
                                 // trigger = 1;
+                              await databaseHelper.insertMusic(imageId: imageId, musicPath: musicFile.path, title: tag[0].toString(), artist: tag[1].toString(), album: tag[2].toString());
+                              print('Refreshing database after insertion...');
+                              await _refreshDatabase();
+                              print('Refreshed database after insertion...');
                               setState(() => {
-                                databaseHelper.insertMusic(imageId: imageId, musicPath: musicFile.path, title: tag[0].toString(), artist: tag[1].toString(), album: tag[2].toString()),
                                 // pathStr = musicFile.path.toString(), 
                                 title = tag[0].toString(),
                                 artist = tag[1].toString(),
                                 album = tag[2].toString(),
                                 // albumArtByte = buffer,
                                 // widget.musicList[widget.index] = [titleLarge, artist, album, base64Encode(albumArtByte)],
-                                });
+                              });
                               // }                            
                           },
                         ),

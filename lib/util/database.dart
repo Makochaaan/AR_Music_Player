@@ -143,7 +143,9 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getMusicInfo({required int imageId}) async {
     final dbClient = await db;
-    return await dbClient.query(musicTable, where: 'ImageId = ?', whereArgs: [imageId]);
+    final result = await dbClient.query(musicTable, where: 'ImageId = ?', whereArgs: [imageId]);
+    print('Music Data : $result');
+    return result;
   }
 }
 
