@@ -6,7 +6,7 @@ import '../util/database.dart';
 
 class AddInfoPage extends StatefulWidget {
 
-  final List<dynamic> pictureData;
+  final Map<String, dynamic> pictureData;
   const AddInfoPage({Key? key, required this.pictureData}) : super(key: key);
 
   @override
@@ -16,17 +16,27 @@ class AddInfoPage extends StatefulWidget {
 class _AddInfoPageState extends State<AddInfoPage> {
 
   late int imageId = widget.pictureData[0];
-  List<dynamic> musicList = [];
+  Map<String, dynamic> musicList = {};
   File musicFile = File('');
   Uint8List albumArtByte = Uint8List(0);
   int trigger = 0;
 
+  late DatabaseHelper databaseHelper;
+
   @override
   void initState() {
     super.initState();
-    final databaseHelper = DatabaseHelper();
-    databaseHelper.getMusicInfo(musicList: musicList, imageId: imageId);
+    databaseHelper = DatabaseHelper();
+    _initializeDatabase();
   }
+
+  Future<void> _initializeDatabase() async {
+    final musicData = await databaseHelper.getMusicInfo(imageId: imageId);
+    setState(() {
+      musicList = musicData[0];
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -39,12 +49,11 @@ class _AddInfoPageState extends State<AddInfoPage> {
     var artist = (musicList[4]!=null)?musicList[4]:"";
     var album = (musicList[5]!=null)?musicList[5]:"";
 
-    final databaseHelper = DatabaseHelper();
 
     // 音楽情報が存在する場合
     if (title != ""|| artist != ""|| album != ""){
       // albumArtByte = base64Decode(widget.musicList[widget.index][3]);
-      return Scaffold(
+      final componentWithMusic = Scaffold(
         appBar: AppBar(
           title: const Text("画像情報ページ"),
         ),
@@ -76,7 +85,7 @@ class _AddInfoPageState extends State<AddInfoPage> {
                       child: const Text("Add Music"),
                       onPressed: () async {
                         final processer = ProcessFile();
-                        musicFile = await processer.GetFile();
+                        musicFile = await processer.GetAudioFileFromLocal();
                         var tag = await processer.GetTag(musicFile);
                           
                         // TODO: 画像からアルバムアートを取得する
@@ -115,8 +124,12 @@ class _AddInfoPageState extends State<AddInfoPage> {
           ),
         ),
       );
+
+      // databaseHelper.close();
+      return componentWithMusic;
     } else { // 音楽情報が存在しない場合(初期状態)
-      return Scaffold(
+
+      final componentInit = Scaffold(
         appBar: AppBar(
           title: const Text("画像情報ページ"),
         ),
@@ -146,7 +159,7 @@ class _AddInfoPageState extends State<AddInfoPage> {
                         child:TextButton( child: const Text('Add Music'), 
                           onPressed: () async {
                               final processer = ProcessFile();
-                              musicFile = await processer.GetFile();
+                              musicFile = await processer.GetAudioFileFromLocal();
                               var tag = await processer.GetTag(musicFile);
                               // var buffer = await processer.extractAlbumArt(musicFile);
                               // if (buffer != null){
@@ -174,6 +187,9 @@ class _AddInfoPageState extends State<AddInfoPage> {
           ),
         ),
       );
+
+      // databaseHelper.close();
+      return componentInit;
     }
   }
 }

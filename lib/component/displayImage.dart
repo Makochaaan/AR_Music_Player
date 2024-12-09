@@ -14,18 +14,38 @@ class DisplayImageWidget extends StatefulWidget {
 
 class _DisplayImageWidgetState extends State<DisplayImageWidget> {
 
-  List<List<dynamic>> pictureList = [];
-
+  List<Map<String,dynamic>> pictureList = [];
+  late DatabaseHelper databaseHelper;
+  bool isLoading = true;
+  
   @override
   void initState() {
     super.initState();
-    final databaseHelper = DatabaseHelper();
-    databaseHelper.getImageInfo(pictureList: pictureList, index: widget.index);
+    databaseHelper = DatabaseHelper();
+    _initializeDatabase();
   }
+
+  // 画像パスを取得
+  // indexは0から始まるため、+1している
+  Future<void> _initializeDatabase() async {
+    var imageData = await databaseHelper.getImageInfo(index: widget.index+1);
+    setState(() {
+      pictureList = imageData;
+      isLoading = false;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    // 画像のロード中
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+    // ロードが完了後実行
+    final picture = InkWell(
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(builder: (context) {
@@ -42,9 +62,11 @@ class _DisplayImageWidgetState extends State<DisplayImageWidget> {
             borderRadius: BorderRadius.circular(20),
           ),
           clipBehavior: Clip.antiAliasWithSaveLayer,
-          child: Image.file(File(pictureList[0][1])),
+          child: Image.file(File(pictureList[0]['ImagePath'])),
         ),
       ),
     );
+
+    return picture;
   }
 }

@@ -2,18 +2,45 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:charset_converter/charset_converter.dart';
-import 'copyFile.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+
+// ファイルを処理する機能を搭載したクラス
+// CopyFile: ファイルをコピーする機能を提供するメソッド
+// 与えたパスに存在するファイルをアプリ内のassetsフォルダにコピーする
+// audioファイル、画像ファイルをコピーするために使用
+// GetFile: ファイルを取得するメソッド
+// assetsフォルダ内のファイルを取得するために使用
+// GetTag等でファイルを処理するために使用
+// GetTag: 音楽ファイルからタグを取得するメソッド(mp3のみ現在対応)
+
 
 class ProcessFile {
-  Future<File> GetFile() async {
+  Future<void> copyFileToAssets(String selectedFilePath, String folderName) async {
+  // ドキュメントディレクトリのパスを取得
+  final directory = await getApplicationDocumentsDirectory();
+  final targetDirectory = Directory(p.join(directory.path, folderName));
+
+  // フォルダが存在しない場合は作成
+  if (!await targetDirectory.exists()) {
+    await targetDirectory.create(recursive: true);
+  }
+
+  final fileName = p.basename(selectedFilePath);
+  final newPath = p.join(targetDirectory.path, fileName);
+
+  // ファイルをコピー
+  await File(selectedFilePath).copy(newPath);
+}
+
+  Future<File> GetAudioFileFromLocal() async {
     FilePickerResult? result;
-    final copyer = CopyFile();
     result = await FilePicker.platform.pickFiles(
       dialogTitle: 'Please Play Music File', type: FileType.audio
     );
     if (result != null) {
       File file = File(result.files.single.path!);
-      copyer.CopyFileToAppFolder(result.files.single.path!);
+      copyFileToAssets(result.files.single.path!,"audio");
       return file;
     } else {
       return File('');
