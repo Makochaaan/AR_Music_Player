@@ -1,199 +1,190 @@
-import 'package:sqlite3/sqlite3.dart';
-import 'package:path/path.dart' as p;
-import 'dart:io';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import 'dart:developer';
+import 'package:flutter/material.dart';
 
 class DatabaseHelper {
-  
-  // データベースのテーブルを初期化
-  void initTable() {
-    final dbPath = p.join(Directory.current.path, 'assets', 'user_database.db');
-    final db = sqlite3.open(dbPath);
+  static const String dbName = 'user_database.db';
+  static const String imageTable = 'Image';
+  static const String musicTable = 'Music';
 
-    try {
-      db.select('DELETE FROM Image');
-    } catch(e) {
-      db.execute('''
-        CREATE TABLE Image (
-          ImageId INTEGER PRIMARY KEY,
-          ImagePath TEXT,
-          Place TEXT,
-          Time TEXT,
-          Description TEXT
-        )
-      ''');
-    }
+  static final DatabaseHelper _instance = DatabaseHelper._internal();
+  factory DatabaseHelper() => _instance;
 
-    try {
-      db.select('DELETE FROM Music');
-    } catch(e) {
-      db.execute('''
-        CREATE TABLE Music (
-          ImageId INTEGER,
-          MusicId INTEGER,
-          MusicPath TEXT,
-          Title TEXT,
-          Artist TEXT,
-          Album TEXT
-        )
-      ''');
-    }
-    db.dispose(); 
+  DatabaseHelper._internal();
+
+  Database? _db;
+
+  Future<Database> get db async {
+    if (_db != null) return _db!;
+    _db = await _initDatabase();
+    return _db!;
   }
 
-  // データベースに画像データを挿入
-  // ボタンのクリックに応じて自動で画像IDを生成
-  // addImageによる画像の登録時に使用
-  // 参照先：mainPage.dart
-  void insertImage({required String imagePath}) {
-    final dbPath = p.join(Directory.current.path, 'assets', 'user_database.db');
-    final db = sqlite3.open(dbPath);
+  Future<Database> _initDatabase() async {
+    final directory = await getDatabasesPath();
+    final dbPath = join(directory, dbName);
 
-    final sqlText = db.prepare('INSERT INTO Image(ImagePath) VALUES (?)');
-    sqlText.execute([imagePath]);
-    sqlText.dispose();
-    
-    db.dispose();
+    return await openDatabase(
+      dbPath,
+      version: 1,
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS $imageTable (
+            ImageId INTEGER PRIMARY KEY,
+            ImagePath TEXT,
+            Place TEXT,
+            Time TEXT,
+            Description TEXT
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS $musicTable (
+            ImageId INTEGER,
+            MusicId INTEGER,
+            MusicPath TEXT,
+            Title TEXT,
+            Artist TEXT,
+            Album TEXT,
+            AlbumImagePath TEXT
+          )
+        ''');
+      },
+    );
   }
 
-  // データベースに音楽データを挿入
-  // 画像ページより選択する際に画像IDを指定する
-  // API経由の場合は音楽IDを指定、そこより各種情報を取得
-  // ローカルファイルからの場合は音楽IDを指定せず、ファイルパスを指定
-  void insertMusic({required int imageId,int? musicId, String? musicPath, String? title, String? artist, String? album}) {
-    final dbPath = p.join(Directory.current.path, 'assets', 'user_database.db');
-    final db = sqlite3.open(dbPath);
-
-    // ファイルからの場合
-    if (musicId == null) {
-      final sqlText = db.prepare('INSERT INTO Music(ImageId, MusicPath, Title, Artist, Album) VALUES (?, ?, ?, ?, ?)');
-      sqlText.execute([imageId, musicPath, title, artist, album]);
-      sqlText.dispose();
-    }
-
-    // API経由の場合
-    else {
-      final sqlText = db.prepare('INSERT INTO Music(ImageId, MusicId, Title, Artist, Album) VALUES (?, ?, ?, ?, ?)');
-      sqlText.execute([imageId, musicId, title, artist, album]);
-      sqlText.dispose();
-    }
-    
-    db.dispose();
+  Future<void> insertImage({required String imagePath}) async {
+    final dbClient = await db;
+    int id = await dbClient.insert(imageTable, {'ImagePath': imagePath});
+    log('Image inserted with ID: $id and Path: $imagePath');
   }
 
-  // データの削除。画像IDに紐づいた両情報を削除
-  // 中間IDを削除した場合、IDを詰める
-  void deleteData({required int imageId}) {
-    final dbPath = p.join(Directory.current.path, 'assets', 'user_database.db');
-    final db = sqlite3.open(dbPath);
-
-    db.execute('BEGIN TRANSACTION');
-
-    try {
-      // データの削除
-      final deleteImageSql = db.prepare('DELETE FROM Image WHERE ImageId = ?');
-      deleteImageSql.execute([imageId]);
-      deleteImageSql.dispose();
-
-      final deleteMusicSql = db.prepare('DELETE FROM Music WHERE ImageId = ?');
-      deleteMusicSql.execute([imageId]);
-      deleteMusicSql.dispose();
-
-      // IDの更新
-      final updateImageSql = db.prepare('UPDATE Image SET ImageId = ImageId - 1 WHERE ImageId > ?');
-      updateImageSql.execute([imageId]);
-      updateImageSql.dispose();
-
-      final updateMusicSql = db.prepare('UPDATE Music SET ImageId = ImageId - 1 WHERE ImageId > ?');
-      updateMusicSql.execute([imageId]);
-      updateMusicSql.dispose();
-
-      db.execute('COMMIT');
-
-    } catch (e) {
-      db.execute('ROLLBACK');
-      rethrow;
-    } finally {
-      db.dispose();
-    }
+  Future<void> insertMusic({
+    required int imageId,
+    int? musicId,
+    String? musicPath,
+    String? title,
+    String? artist,
+    String? album,
+    String? albumImagePath,
+  }) async {
+    final dbClient = await db;
+    await dbClient.insert(musicTable, {
+      'ImageId': imageId,
+      if (musicId != null) 'MusicId': musicId,
+      if (musicId == null) 'MusicPath': musicPath,
+      'Title': title,
+      'Artist': artist,
+      'Album': album,
+      if (albumImagePath != null) 'AlbumImagePath': albumImagePath,
+    });
   }
 
-  void updateImage({required int iamgeId, required String place, required String time, required String description}) {
-    final dbPath = p.join(Directory.current.path, 'assets', 'user_database.db');
-    final db = sqlite3.open(dbPath);
-
-    final sqlText = db.prepare('UPDATE Image SET Place = ?, Time = ?, Description = ? WHERE ImageId = ?');
-    sqlText.execute([place, time, description, iamgeId]);
+  Future<void> deleteData({required int imageId}) async {
+    final dbClient = await db;
+    await dbClient.transaction((txn) async {
+      await txn.delete(imageTable, where: 'ImageId = ?', whereArgs: [imageId]);
+      await txn.delete(musicTable, where: 'ImageId = ?', whereArgs: [imageId]);
+    });
   }
 
-  void updateMusic({required int imageId, int? musicId, String? musicPath, String? title, String? artist, String? album}) {
-    final dbPath = p.join(Directory.current.path, 'assets', 'user_database.db');
-    final db = sqlite3.open(dbPath);
-
-    // ファイルからの場合
-    if (musicId == null) {
-      final sqlText = db.prepare('UPDATE Music SET MusicId = ?, MusicPath = ?, Title = ?, Artist = ?, Album = ? WHERE ImageId = ?');
-      sqlText.execute([null, musicPath, title, artist, album, imageId]);
-    } else { // API経由の場合
-      final sqlText = db.prepare('UPDATE Music SET MusicPath = ?, Title = ?, Artist = ?, Album = ?, MusicId = ? WHERE ImageId = ?');
-      sqlText.execute([null, title, artist, album, musicId, imageId]);
-    } 
+  Future<void> updateImage({
+    required int imageId,
+    required String place,
+    required String time,
+    required String description,
+  }) async {
+    final dbClient = await db;
+    await dbClient.update(
+      imageTable,
+      {
+        'Place': place,
+        'Time': time,
+        'Description': description,
+      },
+      where: 'ImageId = ?',
+      whereArgs: [imageId],
+    );
   }
 
-  void getImageInfo({required List<List<dynamic>> pictureList, int? index}) {
-    final dbPath = p.join(Directory.current.path, 'assets', 'user_database.db');
-    final db = sqlite3.open(dbPath);
+  Future<void> updateMusic({
+    required int imageId,
+    int? musicId,
+    String? musicPath,
+    String? title,
+    String? artist,
+    String? album,
+    String? albumImagePath,
+  }) async {
+    final dbClient = await db;
+    await dbClient.update(
+      musicTable,
+      {
+        if (musicId == null) 'MusicPath': musicPath,
+        'Title': title,
+        'Artist': artist,
+        'Album': album,
+        if (musicId != null) 'MusicId': musicId,
+        if (albumImagePath != null) 'AlbumImagePath': albumImagePath,
+      },
+      where: 'ImageId = ?',
+      whereArgs: [imageId],
+    );
+  }
 
+  Future<List<Map<String, dynamic>>> getImageInfo({int? index}) async {
+    final dbClient = await db;
     if (index != null) {
-      final result = db.select('SELECT * FROM Image WHERE ImageId = ?', [index]);
-      for (final row in result) {
-        pictureList.add([row[0], row[1], row[2], row[3], row[4]]);
-      }
+      final List<Map<String, dynamic>> result = await dbClient.query(imageTable, where: 'ImageId = ?', whereArgs: [index]);
+      return result;
     } else {
-      final result = db.select('SELECT * FROM Image');
-      for (final row in result) {
-        pictureList.add([row[0], row[1], row[2], row[3], row[4]]);
-      }
+      final List<Map<String, dynamic>> result = await dbClient.query(imageTable);
+      print('Image info result: $result');
+      return result;
     }
-
-    db.dispose();
+    
   }
 
-  void getMusicInfo({required List<dynamic> musicList, required int imageId}) {
-    final dbPath = p.join(Directory.current.path, 'assets', 'user_database.db');
-    final db = sqlite3.open(dbPath);
-
-    final result = db.select('SELECT * FROM Music WHERE ImageId = ?', [imageId]);
-    musicList.add([result[0], result[1], result[2], result[3], result[4], result[5]]);
-
-    db.dispose();
+  Future<List<Map<String, dynamic>>> getMusicInfo({required int imageId}) async {
+    final dbClient = await db;
+    final result = await dbClient.query(musicTable, where: 'ImageId = ?', whereArgs: [imageId]);
+    print('Music Data : $result');
+    return result;
   }
-
 }
 
-// void main() {
-//   final databaseHelper = DatabaseHelper();
-//   databaseHelper.initTable();
-//   for (int i=0; i<10; i++) {
-//     databaseHelper.insertImage(imagePath:"a", place:"a", time:"a", description:"a");
-//     if (i%4 == 0) {
-//       databaseHelper.insertMusic(imageId: i, musicId: 5, title: "b", artist: "b", album: "b");
-//     } else {   
-//       databaseHelper.insertMusic(imageId: i, musicPath: "b", title: "b", artist: "b", album: "b");
-//     }
-//   }
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-  // databaseHelper.deleteData(imageId: 10);
-  // databaseHelper.updateImage(iamgeId: 1, place: "b", time: "b", description: "b");
-  // databaseHelper.updateMusic(imageId: 1, musicId: 1, title: "c", artist: "c", album: "c");
-  // databaseHelper.updateMusic(imageId: 1, musicPath: "c", title: "c", artist: "c", album: "c");
-
-  // List<List<dynamic>> pictureList = [];
-  // List<List<dynamic>> musicList = [];
-
-  // databaseHelper.getImageInfo(pictureList);
-  // databaseHelper.getMusicInfo(musicList, 1);
-
-  // print(pictureList);
-  // print(musicList);
-
-// }
+  final dbHelper = DatabaseHelper();
+  await dbHelper.insertImage(imagePath: 'path/to/image');
+  await dbHelper.insertImage(imagePath: 'path/to/imageas');
+  await dbHelper.insertMusic(
+    imageId: 1,
+    title: 'title',
+    artist: 'artist',
+    album: 'album',
+  );
+  await dbHelper.updateImage(
+    imageId: 1,
+    place: 'place',
+    time: 'time',
+    description: 'description',
+  );
+  await dbHelper.updateMusic(
+    imageId: 1,
+    title: 'new title',
+    artist: 'new artist',
+    album: 'new album',
+  );
+  await dbHelper.deleteData(imageId: 1);
+  final imageInfo = await dbHelper.getImageInfo();
+  for (var element in imageInfo) {
+    print(element);
+  }
+  final musicInfo = await dbHelper.getMusicInfo(imageId: 1);
+  for (var element in musicInfo) {
+    print(element);
+  }
+}

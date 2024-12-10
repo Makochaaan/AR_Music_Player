@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
 import '../util/processFile.dart';
 import '../component/displayAlbumArt.dart';
 import 'dart:typed_data';
@@ -12,7 +11,7 @@ class AddInfoPage extends StatefulWidget {
   final XFile picture;
   final List<List<String>> musicList;
   final int index;
-  AddInfoPage({required this.picture, required this.musicList, required this.index});
+  const AddInfoPage({super.key, required this.picture, required this.musicList, required this.index});
 
   @override
   _AddInfoPageState createState() => _AddInfoPageState();
@@ -40,7 +39,7 @@ class _AddInfoPageState extends State<AddInfoPage> {
       
       return Scaffold(
         appBar: AppBar(
-          title: Text("画像情報ページ"),
+          title: const Text("画像情報ページ"),
         ),
         body: SingleChildScrollView(
           child: Container(
@@ -52,16 +51,16 @@ class _AddInfoPageState extends State<AddInfoPage> {
                 Column(children: [
                   Container(
                     padding: const EdgeInsets.all(32),
-                    child: Column(children: <Widget>[Text("Picture Data")]),
+                    child: const Column(children: <Widget>[Text("Picture Data")]),
                   ),
-                  Row(children: [Text("Place:"), Text("a"),]),
-                  Row(children: [Text("Time:"),  Text("a"),]),
+                  const Row(children: [Text("Place:"), Text("a"),]),
+                  const Row(children: [Text("Time:"),  Text("a"),]),
                 ]),
                 
                 Container(
                   padding: const EdgeInsets.all(32),
                   child: Column(children: <Widget>[
-                    Text("Music"),
+                    const Text("Music"),
                     Text(title),
                     Text(artist),
                     Text(album),
@@ -76,7 +75,7 @@ class _AddInfoPageState extends State<AddInfoPage> {
     } else {
       return Scaffold(
         appBar: AppBar(
-          title: Text("画像情報ページ"),
+          title: const Text("画像情報ページ"),
         ),
         body: SingleChildScrollView(
           child: Container(
@@ -88,45 +87,45 @@ class _AddInfoPageState extends State<AddInfoPage> {
                 Column(children: [
                   Container(
                     padding: const EdgeInsets.all(32),
-                    child: Column(children: <Widget>[Text("Picture Data")]),
+                    child: const Column(children: <Widget>[Text("Picture Data")]),
                   ),
-                  Row(children: [Text("Place:"), Text("a"),]),
-                  Row(children: [Text("Time:"),  Text("a"),]),
+                  const Row(children: [Text("Place:"), Text("a"),]),
+                  const Row(children: [Text("Time:"),  Text("a"),]),
                 ]),
                 
                 Container(
                   padding: const EdgeInsets.all(32),
                   child: Column(children: <Widget>[
                     Row(children: <Widget>[
-                      Text("Music"),
+                      const Text("Music"),
                       Container(
-                        padding: EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(32),
                         child:TextButton( child: const Text('Add Music'), 
                           onPressed: () async {
                             if (widget.musicList[widget.index][0] == ""&&widget.musicList[widget.index][1] == ""&&widget.musicList[widget.index][2] == ""&&widget.musicList[widget.index][3] == ""){
                               final processer = ProcessFile();
-                              musicFile = await processer.GetFile();
+                              musicFile = await processer.GetAudioFileFromLocal();
                               var tag = await processer.GetTag(musicFile);
-                              var buffer = await processer.extractAlbumArt(musicFile);
-                              if (buffer != null){
+                              // var buffer = await processer.extractAlbumArt(musicFile);
+                              // if (buffer != null){
                                 trigger = 1;
                                 setState(() => {
                                 pathStr = musicFile.path.toString(), 
                                 title = tag[0].toString(),
                                 artist = tag[1].toString(),
                                 album = tag[2].toString(),
-                                albumArtByte = buffer,
+                                // albumArtByte = buffer,
                                 widget.musicList[widget.index] = [title, artist, album, base64Encode(albumArtByte)],
                                 });
-                              } else {
-                                setState(() => {
-                                pathStr = musicFile.path.toString(), 
-                                title = tag[0].toString(),
-                                artist = tag[1].toString(),
-                                album = tag[2].toString(),
-                                widget.musicList[widget.index] = [title, artist, album,""],
-                                });
-                              }
+                              // } else {
+                              //   setState(() => {
+                              //   pathStr = musicFile.path.toString(), 
+                              //   title = tag[0].toString(),
+                              //   artist = tag[1].toString(),
+                              //   album = tag[2].toString(),
+                              //   widget.musicList[widget.index] = [title, artist, album,""],
+                              //   });
+                              // }
                             }                            
                           },
                         ),
@@ -135,7 +134,7 @@ class _AddInfoPageState extends State<AddInfoPage> {
                     Text(title),
                     Text(artist),
                     Text(album),
-                    (trigger==1)?AddAlbumArt(byte: albumArtByte):Text(""),
+                    (trigger==1)?AddAlbumArt(byte: albumArtByte):const Text(""),
 
                   ])
                 ),

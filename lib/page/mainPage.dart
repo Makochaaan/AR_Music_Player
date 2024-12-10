@@ -3,6 +3,7 @@ import '../component/displayImage.dart';
 import '../component/addImageDialog.dart';
 import '../util/database.dart';
 import 'unityPage.dart';
+import 'dart:developer';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -13,21 +14,50 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
 
-  List<List<dynamic>> pictureList = [];
-  List<List<dynamic>> musicList = [];
+  List<Map<String, dynamic>> pictureList = [];
   late DatabaseHelper databaseHelper;
+  bool isDatabaseInitialized = false;
   
   @override
   void initState() {
     super.initState();
     databaseHelper = DatabaseHelper();
-    databaseHelper.getImageInfo(pictureList: pictureList);
+    _initializeDatabase();
+  }
+
+  Future<void> _initializeDatabase() async {
+    final pictureData = await databaseHelper.getImageInfo();
+    setState(() {
+      isDatabaseInitialized = true;
+      pictureList = pictureData;
+    });
+  }
+
+  Future<void> _refreshDatabase() async {
+    final pictureData = await databaseHelper.getImageInfo();
+    log('Database refreshed: ${pictureData.length} items loaded.');
+    for (var element in pictureData) {
+      log('Item: $element');
+    }
+    if (mounted) {
+        setState(() {
+            pictureList = pictureData;
+        });
+    }
+    
   }
 
   @override
   Widget build(BuildContext context) {
-
-    return Scaffold(
+    if (!isDatabaseInitialized) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+  
+    final component = Scaffold(
       appBar: AppBar(
         title: const Text('画像一覧'),
       ),
@@ -44,24 +74,36 @@ class _MainPageState extends State<MainPage> {
             // 「画像を追加」窓を追加する処理
             return InkWell(
               onTap: () async {
-                databaseHelper = DatabaseHelper();
-                final newPictureComponent = await showDialog<dynamic>(
-                  context: context,
-                  builder: (_) {
-                    return const AddImageDialog();
-                  });
-                if (newPictureComponent != null) {
-                  if (newPictureComponent is List<String>){
-                    setState(() {
-                      for (var i = 0; i < newPictureComponent.length; i++) {
-                        databaseHelper.insertImage(imagePath: newPictureComponent[i]);
+                try {
+                  // ダイアログからの結果を取得
+                  final newPictureComponent = await showDialog<dynamic>(
+                    context: context,
+                    builder: (_) {
+                      return const AddImageDialog();
+                    },
+                  );
+                  // 挿入処理
+                  if (newPictureComponent != null) {
+                    if (newPictureComponent is List<String>) {
+                      for (var imagePath in newPictureComponent) {
+                        log('Inserting image: $imagePath');
+                        await databaseHelper.insertImage(imagePath: imagePath);
+                        log('Inserted image: $imagePath');
                       }
-                    });
-                  } else if (newPictureComponent is String){
-                    setState(() {
-                      databaseHelper.insertImage(imagePath: newPictureComponent);
-                    });
+                    } else if (newPictureComponent is String) {
+                      log('Inserting image: $newPictureComponent');
+                      await databaseHelper.insertImage(imagePath: newPictureComponent);
+                      log('Inserted image: $newPictureComponent');
+                    }
                   }
+
+                  // 挿入後にデータベースをリフレッシュ
+                  log('Refreshing database after insertion...');
+                  await _refreshDatabase();
+                  log('Database refresh complete.');
+                } catch (e, stackTrace) {
+                  log('Error during image insertion or refresh: $e');
+                  log('Stack trace: $stackTrace');
                 }
               },
               child: SizedBox( // カードデザイン
@@ -115,7 +157,7 @@ class _MainPageState extends State<MainPage> {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (context) {
-                      return UnityDemoScreen(pictureList: pictureList, musicList: musicList);
+                      return UnityDemoScreen(pictureList: pictureList);
                       //pictureListとmusicListを与える
                     }),
                   );
@@ -133,5 +175,7 @@ class _MainPageState extends State<MainPage> {
         ),
       ),
     );
+
+    return component;
   }
 }

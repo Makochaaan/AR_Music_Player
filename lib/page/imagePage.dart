@@ -1,12 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../util/processFile.dart';
-import 'dart:typed_data';
 import '../util/database.dart';
+import 'package:audiotags/audiotags.dart';
+import 'dart:developer';
 
 class AddInfoPage extends StatefulWidget {
 
-  final List<dynamic> pictureData;
+  final Map<String, dynamic> pictureData;
   const AddInfoPage({Key? key, required this.pictureData}) : super(key: key);
 
   @override
@@ -15,36 +16,65 @@ class AddInfoPage extends StatefulWidget {
 
 class _AddInfoPageState extends State<AddInfoPage> {
 
-  late int imageId = widget.pictureData[0];
-  List<dynamic> musicList = [];
+  late int imageId = widget.pictureData['ImageId'];
+  Map<String, dynamic> musicList = {};
   File musicFile = File('');
-  Uint8List albumArtByte = Uint8List(0);
   int trigger = 0;
+  
+
+  late DatabaseHelper databaseHelper;
 
   @override
   void initState() {
     super.initState();
-    final databaseHelper = DatabaseHelper();
-    databaseHelper.getMusicInfo(musicList: musicList, imageId: imageId);
+    databaseHelper = DatabaseHelper();
+    _initializeDatabase();
   }
+
+  Future<void> _initializeDatabase() async {
+    final musicData = await databaseHelper.getMusicInfo(imageId: imageId);
+    if (musicData.isEmpty) {
+      return;
+    } else {
+      print('Music Data: $musicData');
+      setState(() {
+        musicList = musicData[0];
+      });
+    }
+  }
+
+  Future<void> _refreshDatabase() async {
+    final musicData = await databaseHelper.getMusicInfo(imageId: imageId);
+    log('Refreshing database...');
+    log('Refreshing Music Data: $musicData');
+    for (var element in musicData) {
+      log('music Item: $element');
+    }
+    if (mounted) {
+        setState(() {
+            musicList = musicData[0];
+        });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    final imagePath = widget.pictureData[1];
-    var place = (widget.pictureData[2]!=null)?widget.pictureData[2]:"";
-    var time = (widget.pictureData[3]!=null)?widget.pictureData[3]:"";
-    var description = (widget.pictureData[4]!=null)?widget.pictureData[4]:"";
+    final imagePath = widget.pictureData['ImagePath'];
+    var place = (widget.pictureData['Place']!=null)?widget.pictureData['Place']:"";
+    var time = (widget.pictureData['Time']!=null)?widget.pictureData['Time']:"";
+    var description = (widget.pictureData['Description']!=null)?widget.pictureData['Description']:"";
 
-    var title = (musicList[3]!=null)?musicList[3]:"";
-    var artist = (musicList[4]!=null)?musicList[4]:"";
-    var album = (musicList[5]!=null)?musicList[5]:"";
+    var title = (musicList['Title']!=null)?musicList['Title']:"";
+    var artist = (musicList['Artist']!=null)?musicList['Artist']:"";
+    var album = (musicList['Album']!=null)?musicList['Album']:"";
+    var albumArtPath = (musicList['AlbumImagePath']!=null)?musicList['AlbumImagePath']:"";
 
-    final databaseHelper = DatabaseHelper();
 
     // 音楽情報が存在する場合
     if (title != ""|| artist != ""|| album != ""){
       // albumArtByte = base64Decode(widget.musicList[widget.index][3]);
-      return Scaffold(
+      final componentWithMusic = Scaffold(
         appBar: AppBar(
           title: const Text("画像情報ページ"),
         ),
@@ -72,39 +102,40 @@ class _AddInfoPageState extends State<AddInfoPage> {
                     Text(title),
                     Text(artist),
                     Text(album),
+                    if(albumArtPath != "")Image.file(File(albumArtPath!)),
                     TextButton(
-                      child: const Text("Add Music"),
+                      child: const Text("Change Music"),
                       onPressed: () async {
                         final processer = ProcessFile();
-                        musicFile = await processer.GetFile();
-                        var tag = await processer.GetTag(musicFile);
+                        musicFile = await processer.GetAudioFileFromLocal(); // 音楽ファイルのローカルからの取得
+                        await processer.saveDataToFile(musicFile.readAsBytesSync(), imageId, 'audio'); // 音楽ファイルの保存(再生時に使用)
+                        Tag? tag = await AudioTags.read(musicFile.path); // 取得した音楽ファイルのタグ情報の取得
+                        if (tag != null){
+                          // 音楽情報の更新
+                          if (tag.pictures.isNotEmpty){
+                            final albumImagePath = await processer.saveDataToFile(tag.pictures[0].bytes, imageId, 'image');
+                            await databaseHelper.updateMusic(imageId: imageId, musicPath: musicFile.path, title: tag.title, artist: tag.trackArtist, album: tag.album, albumImagePath: albumImagePath);
+                            print('Refreshing database after updation...');
+                            await _refreshDatabase();
+                            print('Refreshed database after updation...');
+                            setState(() => {
+                              title = tag.title,
+                              artist = tag.trackArtist,
+                              album = tag.album,
+                              albumArtPath = albumImagePath,
+                            });
+                          } else {
+                            await databaseHelper.updateMusic(imageId: imageId, musicPath: musicFile.path, title: tag.title, artist: tag.trackArtist, album: tag.album);
+                            print('Refreshing database after updation...');
+                            await _refreshDatabase();
+                            print('Refreshed database after updation...');
+                            setState(() => {
+                              title = tag.title,
+                              artist = tag.trackArtist,
+                              album = tag.album,
+                            });
+                          }
                           
-                        // TODO: 画像からアルバムアートを取得する
-                        // var buffer = await processer.extractAlbumArt(musicFile);
-                        // if (buffer != null){
-                        // trigger = 1;
-
-                        // 音楽情報の更新
-                        if (title != "" || artist != "" || album != "") {
-                          setState(() => {
-                            databaseHelper.updateMusic(imageId: imageId, musicPath: musicFile.path, title: tag[0].toString(), artist: tag[1].toString(), album: tag[2].toString()),
-                            // pathStr = musicFile.path.toString(), 
-                            title = tag[0].toString(),
-                            artist = tag[1].toString(),
-                            album = tag[2].toString(),
-                            // albumArtByte = buffer,
-                            // widget.musicList[widget.index] = [titleLarge, artist, album, base64Encode(albumArtByte)],
-                          });
-                        } else { // 新規音楽情報の追加
-                          setState(() => {
-                            databaseHelper.insertMusic(imageId: imageId, musicPath: musicFile.path, title: tag[0].toString(), artist: tag[1].toString(), album: tag[2].toString()),
-                            // pathStr = musicFile.path.toString(), 
-                            title = tag[0].toString(),
-                            artist = tag[1].toString(),
-                            album = tag[2].toString(),
-                            // albumArtByte = buffer,
-                            // widget.musicList[widget.index] = [titleLarge, artist, album, base64Encode(albumArtByte)],
-                          });
                         }
                       },),
                   // AddAlbumArt(byte: albumArtByte),
@@ -115,8 +146,10 @@ class _AddInfoPageState extends State<AddInfoPage> {
           ),
         ),
       );
+      return componentWithMusic;
     } else { // 音楽情報が存在しない場合(初期状態)
-      return Scaffold(
+
+      final componentInit = Scaffold(
         appBar: AppBar(
           title: const Text("画像情報ページ"),
         ),
@@ -145,28 +178,43 @@ class _AddInfoPageState extends State<AddInfoPage> {
                         padding: const EdgeInsets.all(32),
                         child:TextButton( child: const Text('Add Music'), 
                           onPressed: () async {
-                              final processer = ProcessFile();
-                              musicFile = await processer.GetFile();
-                              var tag = await processer.GetTag(musicFile);
-                              // var buffer = await processer.extractAlbumArt(musicFile);
-                              // if (buffer != null){
-                                // trigger = 1;
-                              setState(() => {
-                                databaseHelper.insertMusic(imageId: imageId, musicPath: musicFile.path, title: tag[0].toString(), artist: tag[1].toString(), album: tag[2].toString()),
-                                // pathStr = musicFile.path.toString(), 
-                                title = tag[0].toString(),
-                                artist = tag[1].toString(),
-                                album = tag[2].toString(),
-                                // albumArtByte = buffer,
-                                // widget.musicList[widget.index] = [titleLarge, artist, album, base64Encode(albumArtByte)],
+                            final processer = ProcessFile();
+                            musicFile = await processer.GetAudioFileFromLocal(); // 音楽ファイルのローカルからの取得
+                            await processer.saveDataToFile(musicFile.readAsBytesSync(), imageId, 'audio'); // 音楽ファイルの保存(再生時に使用)
+                            Tag? tag = await AudioTags.read(musicFile.path); // 取得した音楽ファイルのタグ情報の取得
+                            log('Inserting music: $musicFile.path');
+                            if (tag != null){
+                              // 音楽情報の更新
+                              if (tag.pictures.isNotEmpty) {
+                                // アルバムアートが存在する場合
+                                final albumImagePath = await processer.saveDataToFile(tag.pictures[0].bytes, imageId, 'image');
+                                await databaseHelper.insertMusic(imageId: imageId, musicPath: musicFile.path, title: tag.title, artist: tag.trackArtist, album: tag.album, albumImagePath: albumImagePath);
+                                print('Refreshing database after insertion...');
+                                await _refreshDatabase();
+                                print('Refreshed database after insertion...');
+                                setState(() => {
+                                  title = tag.title,
+                                  artist = tag.trackArtist,
+                                  album = tag.album,
+                                  albumArtPath = albumImagePath,
                                 });
-                              // }                            
-                          },
+                              } else {
+                                // 音楽情報の更新
+                                await databaseHelper.insertMusic(imageId: imageId, musicPath: musicFile.path, title: tag.title, artist: tag.trackArtist, album: tag.album);
+                                print('Refreshing database after insertion...');
+                                await _refreshDatabase();
+                                print('Refreshed database after insertion...');
+                                setState(() => {
+                                  title = tag.title,
+                                  artist = tag.trackArtist,
+                                  album = tag.album,
+                                });
+                              }
+                            }
+                          },                           
                         ),
                       ),
                     ]),
-                    // (trigger==1)?AddAlbumArt(byte: albumArtByte):const Text(""),
-
                   ])
                 ),
               ]
@@ -174,6 +222,9 @@ class _AddInfoPageState extends State<AddInfoPage> {
           ),
         ),
       );
+
+      // databaseHelper.close();
+      return componentInit;
     }
   }
 }

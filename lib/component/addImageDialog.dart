@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../util/copyFile.dart';
+import '../util/processFile.dart';
 
 class AddImageDialog extends StatefulWidget {
   const AddImageDialog({super.key});
@@ -22,14 +22,14 @@ class _AddImageDialogState extends State<AddImageDialog> {
         SimpleDialogOption(
           child: const Text('カメラから追加'),
           onPressed: () async {
-            final copyer = CopyFile();
+            final processer = ProcessFile();
 
             // ファイルの選択
             final pickedFile = await imagePicker.pickImage(source: ImageSource.camera);
             if (pickedFile == null) return;
 
             // 選択したファイルをassetsフォルダにコピー
-            await copyer.copyFileToAssets(pickedFile.path, 'image');
+            await processer.copyFileToAssets(pickedFile.path, 'image');
             setState(() {
               _image = pickedFile.path;
             });
@@ -41,10 +41,10 @@ class _AddImageDialogState extends State<AddImageDialog> {
         SimpleDialogOption(
           child: const Text('ギャラリーから追加'),
           onPressed: () async {
-            final copyer = CopyFile();
+            final processer = ProcessFile();
             final List<XFile> pickedFiles = await imagePicker.pickMultiImage();
             for (var i = 0; i < pickedFiles.length; i++) {
-              await copyer.copyFileToAssets(pickedFiles[i].path, 'image');
+              await processer.copyFileToAssets(pickedFiles[i].path, 'image');
             }
             setState(() {
               for (var i = 0; i < pickedFiles.length; i++) {
