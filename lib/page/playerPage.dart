@@ -46,6 +46,7 @@ class _playerPageState extends State<_playerPage> {
 
     player = AudioPlayer();
     player.setReleaseMode(ReleaseMode.stop);
+    
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await player.setSource(DeviceFileSource(musicPath));
