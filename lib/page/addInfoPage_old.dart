@@ -106,26 +106,26 @@ class _AddInfoPageState extends State<AddInfoPage> {
                               final processer = ProcessFile();
                               musicFile = await processer.GetAudioFileFromLocal();
                               var tag = await processer.GetTag(musicFile);
-                              var buffer = await processer.extractAlbumArt(musicFile);
-                              if (buffer != null){
+                              // var buffer = await processer.extractAlbumArt(musicFile);
+                              // if (buffer != null){
                                 trigger = 1;
                                 setState(() => {
                                 pathStr = musicFile.path.toString(), 
                                 title = tag[0].toString(),
                                 artist = tag[1].toString(),
                                 album = tag[2].toString(),
-                                albumArtByte = buffer,
+                                // albumArtByte = buffer,
                                 widget.musicList[widget.index] = [title, artist, album, base64Encode(albumArtByte)],
                                 });
-                              } else {
-                                setState(() => {
-                                pathStr = musicFile.path.toString(), 
-                                title = tag[0].toString(),
-                                artist = tag[1].toString(),
-                                album = tag[2].toString(),
-                                widget.musicList[widget.index] = [title, artist, album,""],
-                                });
-                              }
+                              // } else {
+                              //   setState(() => {
+                              //   pathStr = musicFile.path.toString(), 
+                              //   title = tag[0].toString(),
+                              //   artist = tag[1].toString(),
+                              //   album = tag[2].toString(),
+                              //   widget.musicList[widget.index] = [title, artist, album,""],
+                              //   });
+                              // }
                             }                            
                           },
                         ),

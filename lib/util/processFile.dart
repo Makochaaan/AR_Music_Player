@@ -59,7 +59,7 @@ class ProcessFile {
     return [title, artist, album];
   }
 
-  Future<Uint8List?> extractAlbumArt(File file) async {
+  Future<Uint8List?> extractAlbumArt_old(File file) async {
   final bytes = await file.readAsBytes();
 
   // 最初の10バイトを読み取り、ID3 タグの存在を確認する
@@ -129,5 +129,5 @@ class ProcessFile {
   // return Uint8List.fromList([]);
   return null;
 }
-
+  
 }

@@ -47,6 +47,7 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.27
   sqflite: ^2.3.2
   path: ^1.8.3
+  audiotags: ^1.4.2
 
 dev_dependencies:
   flutter_test:
