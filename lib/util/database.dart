@@ -46,7 +46,8 @@ class DatabaseHelper {
             MusicPath TEXT,
             Title TEXT,
             Artist TEXT,
-            Album TEXT
+            Album TEXT,
+            AlbumImagePath TEXT
           )
         ''');
       },
@@ -66,6 +67,7 @@ class DatabaseHelper {
     String? title,
     String? artist,
     String? album,
+    String? albumImagePath,
   }) async {
     final dbClient = await db;
     await dbClient.insert(musicTable, {
@@ -75,6 +77,7 @@ class DatabaseHelper {
       'Title': title,
       'Artist': artist,
       'Album': album,
+      if (albumImagePath != null) 'AlbumImagePath': albumImagePath,
     });
   }
 
@@ -112,6 +115,7 @@ class DatabaseHelper {
     String? title,
     String? artist,
     String? album,
+    String? albumImagePath,
   }) async {
     final dbClient = await db;
     await dbClient.update(
@@ -122,6 +126,7 @@ class DatabaseHelper {
         'Artist': artist,
         'Album': album,
         if (musicId != null) 'MusicId': musicId,
+        if (albumImagePath != null) 'AlbumImagePath': albumImagePath,
       },
       where: 'ImageId = ?',
       whereArgs: [imageId],

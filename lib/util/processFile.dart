@@ -17,21 +17,49 @@ import 'package:path_provider/path_provider.dart';
 
 class ProcessFile {
   Future<void> copyFileToAssets(String selectedFilePath, String folderName) async {
-  // ドキュメントディレクトリのパスを取得
-  final directory = await getApplicationDocumentsDirectory();
-  final targetDirectory = Directory(p.join(directory.path, folderName));
+    // ドキュメントディレクトリのパスを取得
+    final directory = await getApplicationDocumentsDirectory();
+    final targetDirectory = Directory(p.join(directory.path, folderName));
 
-  // フォルダが存在しない場合は作成
-  if (!await targetDirectory.exists()) {
-    await targetDirectory.create(recursive: true);
+    // フォルダが存在しない場合は作成
+    if (!await targetDirectory.exists()) {
+      await targetDirectory.create(recursive: true);
+    }
+
+    final fileName = p.basename(selectedFilePath);
+    final newPath = p.join(targetDirectory.path, fileName);
+
+    // ファイルをコピー
+    await File(selectedFilePath).copy(newPath);
   }
 
-  final fileName = p.basename(selectedFilePath);
-  final newPath = p.join(targetDirectory.path, fileName);
+  // 与えたデータをファイルとして保存する
+  Future<String> saveDataToFile(Uint8List data, int imageId, String folderName) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final targetDirectory = Directory(p.join(directory.path, folderName));
+    // フォルダが存在しない場合は作成
+    if (!await targetDirectory.exists()) {
+      await targetDirectory.create(recursive: true);
+    }
 
-  // ファイルをコピー
-  await File(selectedFilePath).copy(newPath);
-}
+    late final String fileName;
+    if (folderName == "audio") {
+      fileName = 'audio_$imageId.mp3';
+    } else if (folderName == "image") {
+      fileName = 'image_$imageId.jpg';
+    }
+
+    final path = p.join(targetDirectory.path, fileName);
+    final file = File(path);
+    // 同名のファイルが存在する場合は削除
+    if (await file.exists()) {
+      await file.delete();
+    }
+
+    await file.writeAsBytes(data);
+
+    return path;
+  }
 
   Future<File> GetAudioFileFromLocal() async {
     FilePickerResult? result;
@@ -59,7 +87,7 @@ class ProcessFile {
     return [title, artist, album];
   }
 
-  Future<Uint8List?> extractAlbumArt_old(File file) async {
+  Future<Uint8List?> extractAlbumArt(File file) async {
   final bytes = await file.readAsBytes();
 
   // 最初の10バイトを読み取り、ID3 タグの存在を確認する
