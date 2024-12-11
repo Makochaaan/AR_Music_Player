@@ -81,7 +81,7 @@ class playerPageState extends State<playerPage> {
         ),
         body: Column( children:[
           Image.file(File(imagePath)),
-          PlayerWidget(player: player),
+          PlayerWidget(player: player,musicData:musicList),
           ]
           )
       );
@@ -94,11 +94,9 @@ class playerPageState extends State<playerPage> {
 
 class PlayerWidget extends StatefulWidget {
   final AudioPlayer player;
+  final Map<String, dynamic> musicData;
 
-  const PlayerWidget({
-    required this.player,
-    super.key,
-  });
+  const PlayerWidget({required this.player,required this.musicData,Key? key}):super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -168,6 +166,15 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
+        Row(
+          children: [
+            Text("Music Title:${widget.musicData['Title']}"),
+            Column(
+              children: [
+                Text("Artist:${widget.musicData['Artist']}"),
+                Text("Album:${widget.musicData['Album']}"),
+              ],),
+          ],),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
