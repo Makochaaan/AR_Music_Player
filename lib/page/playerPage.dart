@@ -5,17 +5,20 @@ import 'package:flutter/material.dart';
 import '../util/database.dart';
 
 void main() {
-  runApp(const MaterialApp(home: _playerPage()));
+  runApp(const MaterialApp(home: playerPage(imageId:1)));
 }
 
-class _playerPage extends StatefulWidget {
-  const _playerPage();
+class playerPage extends StatefulWidget {
+
+  final int imageId;
+
+  const playerPage({Key? key, required this.imageId}) : super(key: key);
 
   @override
-  _playerPageState createState() => _playerPageState();
+  playerPageState createState() => playerPageState();
 }
 
-class _playerPageState extends State<_playerPage> {
+class playerPageState extends State<playerPage> {
   late AudioPlayer player = AudioPlayer();
   late DatabaseHelper databaseHelper;
   bool isInitialized = false;
@@ -35,8 +38,8 @@ class _playerPageState extends State<_playerPage> {
   }
 
   Future<void> _initializeDatabaseNPlayer() async {
-    final musicData = await databaseHelper.getMusicInfo(imageId: 1); // TODO:Unityより伝播されるIdを取得する
-    final pictureData = await databaseHelper.getImageInfo(index: 1); 
+    final musicData = await databaseHelper.getMusicInfo(imageId: widget.imageId); // TODO:Unityより伝播されるIdを取得する
+    final pictureData = await databaseHelper.getImageInfo(index: widget.imageId); 
     setState(() {
       musicList = musicData[0];
       musicPath = musicData[0]['MusicPath'];
@@ -50,7 +53,7 @@ class _playerPageState extends State<_playerPage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await player.setSource(DeviceFileSource(musicPath));
-      await player.resume();
+      // await player.resume();
     });
   }
 
