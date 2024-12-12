@@ -13,6 +13,7 @@ public class DynamicImageTracker : MonoBehaviour
     private GameObject spherePrefab;
 
     private Dictionary<string, GameObject> trackedObjects = new Dictionary<string, GameObject>();
+    private Dictionary<string, string> imageToObjectName = new Dictionary<string, string>(); // 追加
 
     private void OnEnable()
     {
@@ -26,10 +27,14 @@ public class DynamicImageTracker : MonoBehaviour
 
     // flutter側からデータベースに登録されている画像パスを渡し登録するメソッド
     // imagePathを渡し、その画像をトラッキングするように登録する
-    public void RegisterImagePath(string imagePath)
+    public void RegisterImagePath(string message)
     {
+        string imagePath = message.Split(",")[0];
+        string objectName = message.Split(",")[1];
+
         string fullPath = GetFullPath(imagePath);
         Debug.Log($"Received image path: {fullPath}");
+        Debug.Log($"Received object name: {objectName}");
 
         if (!File.Exists(fullPath))
         {
@@ -48,6 +53,7 @@ public class DynamicImageTracker : MonoBehaviour
             {
                 library.ScheduleAddImageWithValidationJob(texture, Path.GetFileNameWithoutExtension(fullPath), 0.1f); // 例: 物理幅10cm
                 Debug.Log("Image added to tracking library");
+                imageToObjectName[Path.GetFileNameWithoutExtension(fullPath)] = objectName; // 追加
             }
             else
             {
@@ -86,7 +92,7 @@ public class DynamicImageTracker : MonoBehaviour
     {
         if (trackedImage.trackingState == TrackingState.Tracking)
         {
-            string objectName = trackedImage.referenceImage.name;
+            string objectName = imageToObjectName[trackedImage.referenceImage.name]; // 変更
             Debug.Log($"Tracked image: {objectName}");
 
             if (!trackedObjects.ContainsKey(objectName))

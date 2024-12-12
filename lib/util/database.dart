@@ -137,6 +137,7 @@ class DatabaseHelper {
     final dbClient = await db;
     if (index != null) {
       final List<Map<String, dynamic>> result = await dbClient.query(imageTable, where: 'ImageId = ?', whereArgs: [index]);
+      log('Image info result(all): $result');
       return result;
     } else {
       final List<Map<String, dynamic>> result = await dbClient.query(imageTable);
