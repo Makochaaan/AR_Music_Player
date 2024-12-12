@@ -513,7 +513,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1102206659
+--- !u!1 &956960663
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -521,8 +521,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1102206661}
-  - component: {fileID: 1102206660}
+  - component: {fileID: 956960665}
+  - component: {fileID: 956960664}
   m_Layer: 0
   m_Name: ImageRecognition
   m_TagString: Untagged
@@ -530,13 +530,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1102206660
+--- !u!114 &956960664
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1102206659}
+  m_GameObject: {fileID: 956960663}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 01662a7eda2fac948846274bae4da123, type: 3}
@@ -544,15 +544,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _arPrefabs:
   - {fileID: 892922802}
-  - {fileID: 651510242}
   _imageManager: {fileID: 1598442705}
---- !u!4 &1102206661
+--- !u!4 &956960665
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1102206659}
+  m_GameObject: {fileID: 956960663}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -734,6 +733,7 @@ GameObject:
   - component: {fileID: 1598442707}
   - component: {fileID: 1598442706}
   - component: {fileID: 1598442705}
+  - component: {fileID: 1598442708}
   m_Layer: 0
   m_Name: XR Origin
   m_TagString: Untagged
@@ -755,7 +755,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_SerializedLibrary: {fileID: 11400000, guid: 3b985dea5eb792147bb1fb75b8f89cc9, type: 2}
   m_MaxNumberOfMovingImages: 1
-  m_TrackedImagePrefab: {fileID: 0}
+  m_TrackedImagePrefab: {fileID: 892922802}
 --- !u!114 &1598442706
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -789,6 +789,20 @@ Transform:
   - {fileID: 760302066}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1598442708
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1598442704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec3505e40b95fa249bd6813028d92bc1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trackedImageManager: {fileID: 1598442705}
+  spherePrefab: {fileID: 892922802}
 --- !u!1 &2114328278
 GameObject:
   m_ObjectHideFlags: 0
@@ -1042,7 +1056,7 @@ SceneRoots:
   - {fileID: 732673237}
   - {fileID: 1598442707}
   - {fileID: 1393609987}
-  - {fileID: 1102206661}
   - {fileID: 892922808}
   - {fileID: 651510248}
   - {fileID: 1181387594}
+  - {fileID: 956960665}

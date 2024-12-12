@@ -18,7 +18,6 @@ class ARMusicPlayerApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const MainPage(),
-      // home: playerPage(musicPath: "a", picture: XFile("a")),
     );
   }
 }

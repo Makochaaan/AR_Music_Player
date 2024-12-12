@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using FlutterUnityIntegration;
 
 public class DetectTouch : MonoBehaviour
 {
@@ -15,9 +16,10 @@ public class DetectTouch : MonoBehaviour
     {
         
     }
-
+    // TODO: ここでFlutterへメッセージの送信を行う
     public void onClickAct() 
     {
         gameObject.SetActive(false);
+        UnityMessageManager.Instance.SendMessageToFlutter(gameObject.name);
     }
 }
