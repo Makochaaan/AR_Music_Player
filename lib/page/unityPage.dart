@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_unity_widget/flutter_unity_widget.dart';
 import 'playerPage.dart';
+import '../util/database.dart';
+import 'dart:developer';
 
 class UnityDemoScreen extends StatefulWidget {
 
@@ -43,11 +45,15 @@ class _UnityDemoScreenState extends State<UnityDemoScreen> {
   void onUnityCreated(controller) {
     _unityWidgetController = controller;
     // TODO:ゲームオブジェクトを10個作成。名称はimageIdに従う。それぞれのゲームオブジェクトに対して画像パスを渡す。
+    // TODO:Unity側のGameObject名等の確認
     for (int i = 0; i < widget.pictureList.length; i++) {
       String objectName = widget.pictureList[i]['ImageId'].toString();
-      _unityWidgetController!.postMessage(objectName,'methodName',widget.pictureList[i]['ImagePath']); // Send a message to the Unity game
+      String imagePath = widget.pictureList[i]['ImagePath'];
+      log('Sending message to Unity: objectName=$objectName, imagePath=$imagePath');
+      _unityWidgetController!.postMessage('XR Origin','RegisterImagePath',imagePath);
+      log('[DONE]Sent message to Unity: objectName=$objectName, imagePath=$imagePath');
+       // Send a message to the Unity game
     }
-    // _unityWidgetController!.postMessage('gameObject','methodName','message'); // Send a message to the Unity game
   }
 
   // Callback that receives messages from the Unity game
@@ -61,11 +67,14 @@ class _UnityDemoScreenState extends State<UnityDemoScreen> {
       ),
     );
   }
-
 }
 
-void main() {
-  runApp(const MaterialApp(
-    home: UnityDemoScreen(pictureList: []),
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Add this line to ensure widgets are initialized
+  final databaseHelper = DatabaseHelper();
+  final List<Map<String, dynamic>> pictureData = await databaseHelper.getImageInfo();
+
+  runApp(MaterialApp(
+    home: UnityDemoScreen(pictureList: pictureData),
   ));
 }

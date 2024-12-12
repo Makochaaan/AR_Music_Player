@@ -15,9 +15,10 @@ public class DetectTouch : MonoBehaviour
     {
         
     }
-
+    // TODO: ここでFlutterへメッセージの送信を行う
     public void onClickAct() 
     {
         gameObject.SetActive(false);
+        UnityMessageManager.Instance.SendMessageToFlutter(gameObject.name);
     }
 }
