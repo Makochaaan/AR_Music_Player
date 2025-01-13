@@ -25,6 +25,10 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ar_musicplayer" android:host="callback" />
             </intent-filter>
         </activity>
         <activity android:name="com.apple.android.sdk.authentication.SDKUriHandlerActivity"
@@ -33,7 +37,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="yourapp" android:host="auth" />
+                <data android:scheme="ar_musicplayer" android:host="callback" />
             </intent-filter>
         </activity>
         <activity

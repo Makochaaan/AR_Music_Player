@@ -48,10 +48,7 @@ class _UnityDemoScreenState extends State<UnityDemoScreen> {
     for (int i = 0; i < widget.pictureList.length; i++) {
       String objectName = widget.pictureList[i]['ImageId'].toString();
       String imagePath = widget.pictureList[i]['ImagePath'];
-      // log('Sending message to Unity: objectName=$objectName, imagePath=$imagePath');
       _unityWidgetController!.postMessage('XR Origin','RegisterImagePath','$imagePath,$objectName');
-      // log('[DONE]Sent message to Unity: objectName=$objectName, imagePath=$imagePath');
-       // Send a message to the Unity game
     }
   }
 

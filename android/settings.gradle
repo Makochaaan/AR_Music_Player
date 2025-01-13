@@ -1,5 +1,6 @@
 include ':app'
 include ':unityLibrary:xrmanifest.androidlib'
+include ':spotify_sdk'
 
 def localPropertiesFile = new File(rootProject.projectDir, "local.properties")
 def properties = new Properties()
@@ -11,6 +12,8 @@ def flutterSdkPath = properties.getProperty("flutter.sdk")
 assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
 apply from: "$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle"
 
-
 include ":unityLibrary"
 project(":unityLibrary").projectDir = file("./unityLibrary")
+
+include ':spotify-app-remote'
+project(':spotify-app-remote').projectDir = file("./spotify-app-remote")
