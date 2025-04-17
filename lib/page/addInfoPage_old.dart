@@ -105,7 +105,7 @@ class _AddInfoPageState extends State<AddInfoPage> {
                             if (widget.musicList[widget.index][0] == ""&&widget.musicList[widget.index][1] == ""&&widget.musicList[widget.index][2] == ""&&widget.musicList[widget.index][3] == ""){
                               final processer = ProcessFile();
                               musicFile = await processer.GetAudioFileFromLocal();
-                              var tag = await processer.GetTag(musicFile);
+                              var tag = await processer.getTag(musicFile);
                               // var buffer = await processer.extractAlbumArt(musicFile);
                               // if (buffer != null){
                                 trigger = 1;

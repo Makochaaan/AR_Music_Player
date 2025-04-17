@@ -163,6 +163,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).primaryColor;
+    print("Music Title:${widget.musicData['Title']}");
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
