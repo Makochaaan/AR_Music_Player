@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../util/processFile.dart';
 import '../util/database.dart';
-import 'package:audiotags/audiotags.dart';
 import 'dart:developer';
 
 class AddInfoPage extends StatefulWidget {
@@ -109,33 +108,29 @@ class _AddInfoPageState extends State<AddInfoPage> {
                         final processer = ProcessFile();
                         musicFile = await processer.GetAudioFileFromLocal(); // 音楽ファイルのローカルからの取得
                         await processer.saveDataToFile(musicFile.readAsBytesSync(), imageId, 'audio'); // 音楽ファイルの保存(再生時に使用)
-                        Tag? tag = await AudioTags.read(musicFile.path); // 取得した音楽ファイルのタグ情報の取得
-                        if (tag != null){
-                          // 音楽情報の更新
-                          if (tag.pictures.isNotEmpty){
-                            final albumImagePath = await processer.saveDataToFile(tag.pictures[0].bytes, imageId, 'image');
-                            await databaseHelper.updateMusic(imageId: imageId, musicPath: musicFile.path, title: tag.title, artist: tag.trackArtist, album: tag.album, albumImagePath: albumImagePath);
-                            print('Refreshing database after updation...');
-                            await _refreshDatabase();
-                            print('Refreshed database after updation...');
-                            setState(() => {
-                              title = tag.title,
-                              artist = tag.trackArtist,
-                              album = tag.album,
-                              albumArtPath = albumImagePath,
-                            });
-                          } else {
-                            await databaseHelper.updateMusic(imageId: imageId, musicPath: musicFile.path, title: tag.title, artist: tag.trackArtist, album: tag.album);
-                            print('Refreshing database after updation...');
-                            await _refreshDatabase();
-                            print('Refreshed database after updation...');
-                            setState(() => {
-                              title = tag.title,
-                              artist = tag.trackArtist,
-                              album = tag.album,
-                            });
-                          }
-                          
+                        List<dynamic> tag = await processer.getTag(musicFile.path); // 取得した音楽ファイルのタグ情報の取得
+                        if (tag[0] != []){
+                          final albumImagePath = await processer.saveDataToFile(tag[0], imageId, 'image');
+                          await databaseHelper.updateMusic(imageId: imageId, musicPath: musicFile.path, title: tag[1], artist: tag[2], album: tag[3], albumImagePath: albumImagePath);
+                          print('Refreshing database after updation...');
+                          await _refreshDatabase();
+                          print('Refreshed database after updation...');
+                          setState(() => {
+                            title = tag[1],
+                            artist = tag[2],
+                            album = tag[3],
+                            albumArtPath = albumImagePath,
+                          });
+                        } else {
+                          await databaseHelper.updateMusic(imageId: imageId, musicPath: musicFile.path, title: tag[1], artist: tag[2], album: tag[3]);
+                          print('Refreshing database after updation...');
+                          await _refreshDatabase();
+                          print('Refreshed database after updation...');
+                          setState(() => {
+                            title = tag[1],
+                            artist = tag[2],
+                            album = tag[3],
+                          });
                         }
                       },),
                   // AddAlbumArt(byte: albumArtByte),
@@ -181,35 +176,32 @@ class _AddInfoPageState extends State<AddInfoPage> {
                             final processer = ProcessFile();
                             musicFile = await processer.GetAudioFileFromLocal(); // 音楽ファイルのローカルからの取得
                             await processer.saveDataToFile(musicFile.readAsBytesSync(), imageId, 'audio'); // 音楽ファイルの保存(再生時に使用)
-                            Tag? tag = await AudioTags.read(musicFile.path); // 取得した音楽ファイルのタグ情報の取得
-                            log('Inserting music: $musicFile.path');
-                            if (tag != null){
+                            List<dynamic> tag = await processer.getTag(musicFile.path); // 取得した音楽ファイルのタグ情報の取得
+                            log('Inserting music: ${musicFile.path}');
+                            if (tag[0] != []) {
+                              // アルバムアートが存在する場合
+                              final albumImagePath = await processer.saveDataToFile(tag[0], imageId, 'image');
+                              await databaseHelper.insertMusic(imageId: imageId, musicPath: musicFile.path, title: tag[1], artist: tag[2], album: tag[3], albumImagePath: albumImagePath);
+                              print('Refreshing database after insertion...');
+                              await _refreshDatabase();
+                              print('Refreshed database after insertion...');
+                              setState(() => {
+                                title = tag[1],
+                                artist = tag[2],
+                                album = tag[3],
+                                albumArtPath = albumImagePath,
+                              });
+                            } else {
                               // 音楽情報の更新
-                              if (tag.pictures.isNotEmpty) {
-                                // アルバムアートが存在する場合
-                                final albumImagePath = await processer.saveDataToFile(tag.pictures[0].bytes, imageId, 'image');
-                                await databaseHelper.insertMusic(imageId: imageId, musicPath: musicFile.path, title: tag.title, artist: tag.trackArtist, album: tag.album, albumImagePath: albumImagePath);
-                                print('Refreshing database after insertion...');
-                                await _refreshDatabase();
-                                print('Refreshed database after insertion...');
-                                setState(() => {
-                                  title = tag.title,
-                                  artist = tag.trackArtist,
-                                  album = tag.album,
-                                  albumArtPath = albumImagePath,
-                                });
-                              } else {
-                                // 音楽情報の更新
-                                await databaseHelper.insertMusic(imageId: imageId, musicPath: musicFile.path, title: tag.title, artist: tag.trackArtist, album: tag.album);
-                                print('Refreshing database after insertion...');
-                                await _refreshDatabase();
-                                print('Refreshed database after insertion...');
-                                setState(() => {
-                                  title = tag.title,
-                                  artist = tag.trackArtist,
-                                  album = tag.album,
-                                });
-                              }
+                              await databaseHelper.insertMusic(imageId: imageId, musicPath: musicFile.path, title: tag[1], artist: tag[2], album: tag[3]);
+                              print('Refreshing database after insertion...');
+                              await _refreshDatabase();
+                              print('Refreshed database after insertion...');
+                              setState(() => {
+                                title = tag[1],
+                                artist = tag[2],
+                                album = tag[3],
+                              });
                             }
                           },                           
                         ),

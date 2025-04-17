@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   audiotags
   charset_converter
   file_selector_windows
+  flutter_media_metadata
   flutter_unity_widget
   sqlite3_flutter_libs
 )

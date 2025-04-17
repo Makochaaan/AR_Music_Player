@@ -4,17 +4,7 @@ import 'dart:typed_data';
 import 'package:charset_converter/charset_converter.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-
-// ファイルを処理する機能を搭載したクラス
-// CopyFile: ファイルをコピーする機能を提供するメソッド
-// 与えたパスに存在するファイルをアプリ内のassetsフォルダにコピーする
-// audioファイル、画像ファイルをコピーするために使用
-// GetFile: ファイルを取得するメソッド
-// assetsフォルダ内のファイルを取得するために使用
-// GetTag等でファイルを処理するために使用
-// GetTag: 音楽ファイルからタグを取得するメソッド(mp3のみ現在対応)
-
-
+import 'package:audiotags/audiotags.dart';
 class ProcessFile {
   Future<void> copyFileToAssets(String selectedFilePath, String folderName) async {
     // ドキュメントディレクトリのパスを取得
@@ -75,16 +65,28 @@ class ProcessFile {
     }
   }
 
-  Future<List<String>> GetTag(File file) async {
-    Uint8List tags = await file.readAsBytes();
-    tags = tags.sublist(tags.length - 128, tags.length);
-    String title = await CharsetConverter.decode("Shift_JIS", tags.sublist(3,33));
-    String artist =  await CharsetConverter.decode("Shift_JIS", tags.sublist(33,63));
-    String album =  await CharsetConverter.decode("Shift_JIS", tags.sublist(63,93));
+  Future<List<dynamic>> getTag(path) async {
+    Tag? tags = await AudioTags.read(path);
+
+    Uint8List titleCode = tags?.title != null
+      ? await CharsetConverter.encode("ISO-8859-1", tags?.title ?? '')
+      : Uint8List.fromList([]);
+    Uint8List artistCode = tags?.trackArtist != null
+      ? await CharsetConverter.encode("ISO-8859-1", tags?.trackArtist ?? '')
+      : Uint8List.fromList([]);
+    Uint8List albumCode = tags?.album != null
+      ? await CharsetConverter.encode("ISO-8859-1", tags?.album ?? '')
+      : Uint8List.fromList([]);
+
+    String title = await CharsetConverter.decode("Shift_JIS", titleCode);
+    String artist = await CharsetConverter.decode("Shift_JIS", artistCode);
+    String album = await CharsetConverter.decode("Shift_JIS", albumCode);
+    Uint8List imageData = tags?.pictures[0].bytes ?? Uint8List.fromList([]);
+
     print('Title: $title');
     print('Artist: $artist');
     print('Album: $album');
-    return [title, artist, album];
+    return [imageData, title, artist, album];
   }
 
   Future<Uint8List?> extractAlbumArt(File file) async {
