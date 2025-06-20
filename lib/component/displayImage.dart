@@ -4,9 +4,9 @@ import '../page/imagePage.dart';
 import '../util/database.dart';
 
 class DisplayImageWidget extends StatefulWidget {
-  final int index;
+  final int imageId;
 
-  const DisplayImageWidget({super.key, required this.index});
+  const DisplayImageWidget({super.key, required this.imageId});
 
   @override
   _DisplayImageWidgetState createState() => _DisplayImageWidgetState();
@@ -28,7 +28,8 @@ class _DisplayImageWidgetState extends State<DisplayImageWidget> {
   // 画像パスを取得
   // indexは0から始まるため、+1している
   Future<void> _initializeDatabase() async {
-    var imageData = await databaseHelper.getImageInfo(index: widget.index+1);
+    var imageData = await databaseHelper.getImageInfo(index: widget.imageId);
+    print('Image data: $imageData');
     setState(() {
       pictureList = imageData;
       isLoading = false;
