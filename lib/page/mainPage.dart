@@ -128,7 +128,7 @@ class _MainPageState extends State<MainPage> {
             );
           } else {
             // 画像ウィンドウを生成する処理
-            return DisplayImageWidget(index: index);
+            return DisplayImageWidget(imageId: pictureList[index]['ImageId']);
           }
         },
       ),
