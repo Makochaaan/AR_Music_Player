@@ -56,7 +56,6 @@ class _AddInfoPageState extends State<AddInfoPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final imagePath = widget.pictureData['ImagePath'];
@@ -72,7 +71,6 @@ class _AddInfoPageState extends State<AddInfoPage> {
 
     // 音楽情報が存在する場合
     if (title != ""|| artist != ""|| album != ""){
-      // albumArtByte = base64Decode(widget.musicList[widget.index][3]);
       final componentWithMusic = Scaffold(
         appBar: AppBar(
           title: const Text("画像情報ページ"),

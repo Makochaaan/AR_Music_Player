@@ -26,7 +26,6 @@ class _DisplayImageWidgetState extends State<DisplayImageWidget> {
   }
 
   // 画像パスを取得
-  // indexは0から始まるため、+1している
   Future<void> _initializeDatabase() async {
     var imageData = await databaseHelper.getImageInfo(index: widget.imageId);
     print('Image data: $imageData');

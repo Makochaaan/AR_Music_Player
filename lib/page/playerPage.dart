@@ -34,10 +34,11 @@ class playerPageState extends State<playerPage> {
     super.initState();
 
     databaseHelper = DatabaseHelper();
-    _initializeDatabaseNPlayer();
+    _initializeDatabase();
+    _initializePlayer();
   }
 
-  Future<void> _initializeDatabaseNPlayer() async {
+  Future<void> _initializeDatabase() async {
     final musicData = await databaseHelper.getMusicInfo(imageId: widget.imageId); // TODO:Unityより伝播されるIdを取得する
     final pictureData = await databaseHelper.getImageInfo(index: widget.imageId); 
     setState(() {
@@ -46,7 +47,9 @@ class playerPageState extends State<playerPage> {
       pictureList = pictureData[0];
       isInitialized = true;
     });
+  }
 
+  Future<void> _initializePlayer() async {
     player = AudioPlayer();
     player.setReleaseMode(ReleaseMode.stop);
     
@@ -54,7 +57,7 @@ class playerPageState extends State<playerPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await player.setSource(DeviceFileSource(musicPath));
       // await player.resume();
-    });
+    }); 
   }
 
   @override
@@ -105,22 +108,22 @@ class PlayerWidget extends StatefulWidget {
 }
 
 class _PlayerWidgetState extends State<PlayerWidget> {
-  PlayerState? _playerState;
-  Duration? _duration;
-  Duration? _position;
+  PlayerState? playerState;
+  Duration? duration0;
+  Duration? position0;
 
-  StreamSubscription? _durationSubscription;
-  StreamSubscription? _positionSubscription;
-  StreamSubscription? _playerCompleteSubscription;
-  StreamSubscription? _playerStateChangeSubscription;
+  StreamSubscription? durationSubscription;
+  StreamSubscription? positionSubscription;
+  StreamSubscription? playerCompleteSubscription;
+  StreamSubscription? playerStateChangeSubscription;
 
-  bool get _isPlaying => _playerState == PlayerState.playing;
+  bool get isPlaying => playerState == PlayerState.playing;
 
-  bool get _isPaused => _playerState == PlayerState.paused;
+  bool get isPaused => playerState == PlayerState.paused;
 
-  String get _durationText => _duration?.toString().split('.').first ?? '';
+  String get durationText => duration0?.toString().split('.').first ?? '';
 
-  String get _positionText => _position?.toString().split('.').first ?? '';
+  String get positionText => position0?.toString().split('.').first ?? '';
 
   AudioPlayer get player => widget.player;
 
@@ -128,18 +131,18 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   void initState() {
     super.initState();
     // Use initial values from player
-    _playerState = player.state;
+    playerState = player.state;
     player.getDuration().then(
           (value) => setState(() {
-            _duration = value;
+            duration0 = value;
           }),
         );
     player.getCurrentPosition().then(
           (value) => setState(() {
-            _position = value;
+            position0 = value;
           }),
         );
-    _initStreams();
+    initStreams();
   }
 
   @override
@@ -153,10 +156,10 @@ class _PlayerWidgetState extends State<PlayerWidget> {
 
   @override
   void dispose() {
-    _durationSubscription?.cancel();
-    _positionSubscription?.cancel();
-    _playerCompleteSubscription?.cancel();
-    _playerStateChangeSubscription?.cancel();
+    durationSubscription?.cancel();
+    positionSubscription?.cancel();
+    playerCompleteSubscription?.cancel();
+    playerStateChangeSubscription?.cancel();
     super.dispose();
   }
 
@@ -181,21 +184,21 @@ class _PlayerWidgetState extends State<PlayerWidget> {
           children: [
             IconButton(
               key: const Key('play_button'),
-              onPressed: _isPlaying ? null : _play,
+              onPressed: isPlaying ? null : play,
               iconSize: 48.0,
               icon: const Icon(Icons.play_arrow),
               color: color,
             ),
             IconButton(
               key: const Key('pause_button'),
-              onPressed: _isPlaying ? _pause : null,
+              onPressed: isPlaying ? pause : null,
               iconSize: 48.0,
               icon: const Icon(Icons.pause),
               color: color,
             ),
             IconButton(
               key: const Key('stop_button'),
-              onPressed: _isPlaying || _isPaused ? _stop : null,
+              onPressed: isPlaying || isPaused ? stop : null,
               iconSize: 48.0,
               icon: const Icon(Icons.stop),
               color: color,
@@ -204,25 +207,25 @@ class _PlayerWidgetState extends State<PlayerWidget> {
         ),
         Slider(
           onChanged: (value) {
-            final duration = _duration;
+            final duration = duration0;
             if (duration == null) {
               return;
             }
             final position = value * duration.inMilliseconds;
             player.seek(Duration(milliseconds: position.round()));
           },
-          value: (_position != null &&
-                  _duration != null &&
-                  _position!.inMilliseconds > 0 &&
-                  _position!.inMilliseconds < _duration!.inMilliseconds)
-              ? _position!.inMilliseconds / _duration!.inMilliseconds
+          value: (position0 != null &&
+                  duration0 != null &&
+                  position0!.inMilliseconds > 0 &&
+                  position0!.inMilliseconds < duration0!.inMilliseconds)
+              ? position0!.inMilliseconds / duration0!.inMilliseconds
               : 0.0,
         ),
         Text(
-          _position != null
-              ? '$_positionText / $_durationText'
-              : _duration != null
-                  ? _durationText
+          position0 != null
+              ? '$positionText / $durationText'
+              : duration0 != null
+                  ? durationText
                   : '',
           style: const TextStyle(fontSize: 16.0),
         ),
@@ -230,47 +233,45 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     );
   }
 
-  void _initStreams() {
-    _durationSubscription = player.onDurationChanged.listen((duration) {
-      setState(() => _duration = duration);
+  void initStreams() {
+    durationSubscription = player.onDurationChanged.listen((duration) {
+      setState(() => duration0 = duration);
     });
 
-    _positionSubscription = player.onPositionChanged.listen(
-      (p) => setState(() => _position = p),
+    positionSubscription = player.onPositionChanged.listen(
+      (p) => setState(() => position0 = p),
     );
 
-    _playerCompleteSubscription = player.onPlayerComplete.listen((event) {
+    playerCompleteSubscription = player.onPlayerComplete.listen((event) {
       setState(() {
-        _playerState = PlayerState.stopped;
-        _position = Duration.zero;
+        playerState = PlayerState.stopped;
+        position0 = Duration.zero;
       });
     });
 
-    _playerStateChangeSubscription =
+    playerStateChangeSubscription =
         player.onPlayerStateChanged.listen((state) {
       setState(() {
-        _playerState = state;
+        playerState = state;
       });
     });
   }
 
-  Future<void> _play() async {
+  Future<void> play() async {
     await player.resume();
-    setState(() => _playerState = PlayerState.playing);
+    setState(() => playerState = PlayerState.playing);
   }
 
-  Future<void> _pause() async {
+  Future<void> pause() async {
     await player.pause();
-    setState(() => _playerState = PlayerState.paused);
+    setState(() => playerState = PlayerState.paused);
   }
 
-  Future<void> _stop() async {
+  Future<void> stop() async {
     await player.stop();
     setState(() {
-      _playerState = PlayerState.stopped;
-      _position = Duration.zero;
+      playerState = PlayerState.stopped;
+      position0 = Duration.zero;
     });
   }
 }
-
-//#endregion

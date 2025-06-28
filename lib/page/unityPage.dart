@@ -1,3 +1,4 @@
+import 'package:ar_music_player/const.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_unity_widget/flutter_unity_widget.dart';
 // import 'playerPage.dart';
@@ -29,7 +30,7 @@ class _UnityDemoScreenState extends State<UnityDemoScreen> {
             return true;
           },
           child: Container(
-            color: Colors.yellow,
+            color: Constants.PRIMARY_COLOR,
             child: UnityWidget(
               onUnityCreated: onUnityCreated,
               onUnityMessage: onUnityMessage,

@@ -1,3 +1,4 @@
+import 'package:ar_music_player/const.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer';
 import '../component/displayImage.dart';
@@ -135,9 +136,9 @@ class _MainPageState extends State<MainPage> {
      
 
       // TODO：フッター処理
-      bottomNavigationBar:Container(
+      bottomNavigationBar: Container(
         height: 60,
-        color: Colors.blue,
+        color: Constants.PRIMARY_COLOR,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [

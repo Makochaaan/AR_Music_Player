@@ -19,6 +19,7 @@ dependencies:
       ref: experimental/unity_6000 # branch name
   image_picker: ^1.1.2
   just_audio: ^0.9.46
+  neverthrow: ^1.0.0
   path_provider: ^2.1.5
   sqflite: ^2.4.1
 

@@ -1,3 +1,4 @@
+import 'package:ar_music_player/const.dart';
 import 'package:flutter/material.dart';
 import 'page/mainPage.dart';
 
@@ -14,7 +15,7 @@ class ARMusicPlayerApp extends StatelessWidget {
       title: 'AR Music Player',
       theme: ThemeData(
 
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Constants.PRIMARY_COLOR),
         useMaterial3: true,
       ),
       home: const MainPage(),
